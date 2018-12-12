@@ -14,18 +14,19 @@ import {
     DELETE_CONTRACT_REQUEST,
     DELETE_CONTRACT_SUCCESS,
     DELETE_CONTRACT_FAILURE,
+    DELETE_CONTRACT_CONFIRM_REQUEST,
+    DELETE_CONTRACT_CONFIRM_SUCCESS,
+    DELETE_CONTRACT_CONFIRM_FAILURE,
     NEW_CONTRACT_REQUEST
 } from "../constants/actions";
-
 
 //contract actions
 
 export function loadContracts(filters) {
-    let token = localStorage.getItem("PasetoToken")
+
     return {
         endpoint: "/odata/Contracts",
 	contracts: [],
-	authToken: token,
 	success: false,
 	response: null,
         apiType: 'OData',
@@ -33,26 +34,23 @@ export function loadContracts(filters) {
         types: [LOAD_CONTRACTS_REQUEST, LOAD_CONTRACTS_SUCCESS, LOAD_CONTRACTS_FAILURE]
     }
 };
-
 export function getContract(id) {
-    let authToken = localStorage.getItem("PasetoToken")
     return {
 	endpoint: `/api/Contract/${id}`,	
-	method: "GET",
-	apiType:'Rest', 
-	authToken: authToken,
+	method: 'GET',
+	entityName: 'Contract',
+	apiType:'Rest',
 	contract: {},
 	types: [GET_CONTRACT_REQUEST, GET_CONTRACT_SUCCESS, GET_CONTRACT_FAILURE] 
     };
 }
 
 export function updateContract(contract) {
-    let authToken = localStorage.getItem("PasetoToken")
     return {
 	endpoint: `/api/contract/${contract.id}`,
 	data: contract,
-	authToken: authToken,
-	method: "PUT",
+	method: 'PUT',
+	entityName: 'Contract',
 	apiType: 'Rest',
 	authenticated: true,
 	updateSuccess: false,
@@ -61,14 +59,13 @@ export function updateContract(contract) {
 }
 
 export function addContract(contract) {
-    let authToken = localStorage.getItem("PasetoToken")
     return {
 	endpoint: `/api/contract/${contract.id}`,
 	data: contract,
 	type: 'API',
-	authToken: authToken,
 	method: "POST",
 	apiType: 'Rest',
+	entityName: 'Contract',
 	authenticated: true,
 	addSuccess: false,
 	types: [ADD_CONTRACT_REQUEST, ADD_CONTRACT_SUCCESS, ADD_CONTRACT_FAILURE]
@@ -77,17 +74,33 @@ export function addContract(contract) {
 }
 export function newContract() {
     return {
+	entityName: 'Contract',
 	type: NEW_CONTRACT_REQUEST
     };
 }
 export function deleteContract(id) {
-    let authToken = localStorage.getItem("PasetoToken")
     return {
 	endpoint: `api/contract/${id}`,
 	method: "DELETE",
-	authToken: authToken,
+	entityName: 'Contract',
 	apiType: 'Rest',
 	authenticated: true,
 	types: [DELETE_CONTRACT_REQUEST, DELETE_CONTRACT_SUCCESS, DELETE_CONTRACT_FAILURE]
     }
-}    
+}
+export function deleteContractConfirm(id) {
+    return {
+	endpoint: `api/contract/${id}`,
+	method: "DELETE",
+	apiType: 'Local',
+	entityName: 'Contract',
+	openDeleteDialog: true,
+	workingId: id,
+	type: DELETE_CONTRACT_CONFIRM_REQUEST,
+	types: [DELETE_CONTRACT_CONFIRM_REQUEST, DELETE_CONTRACT_CONFIRM_SUCCESS, DELETE_CONTRACT_CONFIRM_FAILURE]
+    }
+}
+
+
+
+

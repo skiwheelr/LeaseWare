@@ -1,6 +1,64 @@
+import fetch from 'isomorphic-fetch'
+import request from 'request'
+
+function fetchAuthToken(host, body, use)
+{
+    
+    return fetchCredentials(host, body)
+	.then(function(response) {
+            let error = response.status < 200 && response.status >= 300 
+	    if (error)
+	    {
+		throw new Error("Authorization Error "+  response.status)
+	    }
+	    return response.json();
+	}).then(function(data)
+		{
+		    use(data)
+		})
+	.catch(error=>console.log(error))
+}
+
+function fetchSubject(host, token, domain, use)
+{
+    let uri = host + "/api/"+domain
+    return fetch(uri, {
+	method:'GET',
+	headers :{'Content-Type': 'application/json',
+		  'Authorization': token}		 
+    }).then(function(response)
+	    {
+		let error = response.status < 200 && response.status >= 300 
+		if (error)
+		{
+		    throw new Error("Error "+  response.status)
+		}
+		return response.json();
+	    }).then(function(data)
+		    {
+			use(data)
+		    })
+	.catch(error=>console.log(error))
+}
+
+/**
+ * fetch the credentials in the api to allow the api 
+ * to login.
+ * @param {hostname} host 
+ * @param {value } body 
+ */
+function fetchCredentials(host, body)
+{    
+    let uri = host + "/api/Login/"
+    return fetch(uri, {
+	method:'POST',
+	body: JSON.stringify(body),
+	headers :{'Content-Type': 'application/json'}		 
+    });
+}
 /*
-* Basic retriever for interfacing with a remote api.
-*/
+ * Basic retriever for interfacing with a remote api.
+ */
 class BasicRetriever
 {
     constructor(serviceRoot)
@@ -18,42 +76,21 @@ class BasicRetriever
 }
 
 /*
-* RestApiRetriever.
-*/
-export default class RestApiRetriever extends BasicRetriever
+ * RestApiRetriever. Retrieve the endpoint value 
+ */
+export class RestApiRetriever extends BasicRetriever
 {
     
     constructor(serviceRoot)
     {	
 	super(serviceRoot)
-    	this.options =
-	    {
-		url: serviceRoot,
-		headers: this.headers
-	    }
     }
-    fetchData(payload, authToken, callback)
+    async fetchData(payload, authToken, callback)
     {
-	// just for now.
-	if (authToken == null)
-	{
-	    var authRetriever = new AuthRetriever(this.serviceRoot)
-	    payload = {
-		'user': 'CV',
-		'password': '1929',
-		'blowfish': false,
-		'officeCode': 'C1'
-	    }
-	    authRetriever.fetchData(payload)
-	}
-	this.addAuthenticator(authToken)	
-	let baseService = this.serviceRoot + "/" + payload.endpoint
-	this.options['url'] = baseService;
-	this.options['headers'] = this.headers;
-	request(this.options, callback)
+	return await fetchSubject(this.serviceRoot, authToken, payload.endpoint, callback)
     }  
 }
-export default class ODataApiRetriever extends BasicRetriever
+export  class ODataApiRetriever extends BasicRetriever
 {
     constructor(serviceRoot)
     {
@@ -61,7 +98,6 @@ export default class ODataApiRetriever extends BasicRetriever
 	super(serviceRoot)
 	this.headers = { 'Content-Type': 'application/json',
 			 'User-Agent': 'KarveAgent 4.0',
-			 'Authorization:': '',
 			 'Odata-Version': '4.0',
    			 'OData-MaxVersion': '4.0',
 			 'Accept': 'application/json'};
@@ -80,46 +116,23 @@ export default class ODataApiRetriever extends BasicRetriever
 	if ((payload.sorted || []).length)
 	    
 	{  sortQuery = `&$orderby=` + (payload).sorted.map((obj) =>
-							  { return obj.direction === 'descending' ? `${obj.Code} desc` : obj.Code; }).reverse().join(',');
+							   { return obj.direction === 'descending' ? `${obj.Code} desc` : obj.Code; }).reverse().join(',');
 	}
 	this.options['url'] = `${baseService}?${sortQuery}&$inlinecount=allpages&$format=json`;
 	this.options['headers'] = this.headers
+	
 	request(this.options, callback)
     }
 }
-
-export default class AuthRetriever
+export class AuthRetriever
 {
     constructor(serviceRoot)
     {
-	this.options =
-	    {
-		url: serviceRoot,
-		method: 'POST',
-		headers: {'Content-Type': 'application/json'}
-	    }
-	this.uri = serviceRoot + "/api/Login" 
+	this.serviceRoot = serviceRoot;
     }
-    
-    fetchData(payload)
+    async fetchData(payload, callback)
     {
-	let credentials =
-	    {
-		Code: payload.user,
-		Password: payload.password,
-		Office: { "Code": payload.officeCode},
-		Blowfish: payload.blowfish		
-	    }
-	fetchCredentials(this.uri, credentials).
-	    then(response=>{
-		if (response.status > 200)
-		{
-		    throw new Error("Bad response from server");
-		}
-	    })
-	    .then(value =>{
-		let credential = value["PasetoToken"]
-		localStorage.setItem('PasetoToken', credential)
-	    })
-    }
+	let uri = this.serviceRoot
+	return await fetchAuthToken(uri, payload, callback)
+    }  
 }

@@ -7,28 +7,26 @@ import {
 } from "../constants/actions";
 
 
-function requestLogin(creds) {
+export function requestLogin(creds) {
   return {
     type: LOGIN_REQUEST,
       isFetching: true,
-      apiType: 'Auth'
-    isAuthenticated: false,
-    creds
-  };
-}
-
-function receiveLogin(user) {
-  return {
-    type: LOGIN_SUCCESS,
-      isFetching: false,
       apiType: 'Auth',
-    isAuthenticated: true,
-    token: user.token,
-    user: user
+      payload: creds
   };
 }
-
-function loginError(message) {
+export function receiveLogin(creds) {
+   
+    return {
+    type: LOGIN_SUCCESS,
+    isFetching: false,
+    apiType: 'Auth',
+    isAuthenticated: true,
+    token: creds.Token,
+    payload: creds
+  };
+}
+export function loginError(message) {
   return {
     type: LOGIN_FAILURE,
     isFetching: false,
@@ -37,33 +35,37 @@ function loginError(message) {
     message: message
   };
 }
-
 // Logout actions
-
-function requestLogout() {
+export function requestLogout(creds) {
   return {
     type: LOGOUT_REQUEST,
       isFetching: true,
       apiType: 'Auth',
-    isAuthenticated: true
+      isAuthenticated: true,
+      payload: creds
   };
 }
 
-function receiveLogout() {
+export function receiveLogout() {
+    let loggedOut = {
+	Code: '',
+	Password: '',
+	Blowfish: false,
+	Office: null,
+	Token: ''
+    }    
   return {
     type: LOGOUT_SUCCESS,
       isFetching: false,
       apiType: 'Auth',
-    isAuthenticated: false
+      token: '',
+      isAuthenticated: false,
+      payload: loggedOut
   };
 }
-
 // Logs the user out
 export function logoutUser() {
   return dispatch => {
     dispatch(requestLogout());
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    dispatch(receiveLogout());
   };
 }

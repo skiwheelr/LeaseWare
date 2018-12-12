@@ -1,7 +1,8 @@
 import request from 'request'
 import { NetworkConfig }  from '../constants/netconfig'
-import fetch from 'isomophic-fetch'
-import { AuthRetriever, RestApiRetriever, ODataApiRetriever } from 'retrievers'
+import fetch from 'isomorphic-fetch'
+import { AuthRetriever, RestApiRetriever, ODataApiRetriever } from './retrievers'
+import CredentialStore from './credentialStore';
 
 
 function fetchCredentials(host, body)
@@ -27,7 +28,16 @@ const apiHandler = {
     
 }
 
-export default const api = ({ dispatch }) => next=> action =>{
+var credentialStore = new CredentialStore()
+
+async function storeCredential(action, credentialStore)
+{
+    const data = await apiHandler[action.apiType].fetchData(action, (token=>{
+	credentialStore.store(token)
+    }))							   
+}
+
+export const api = ({ dispatch }) => next=> action =>{
     
     if ((action.apiType !== 'OData') &&
 	(action.apiType !== 'Rest') &&
@@ -37,27 +47,29 @@ export default const api = ({ dispatch }) => next=> action =>{
     }
     
     const [requestType, successType, errorType] = action.types;    
-    const token = localStorage.getItem("pasetoToken") || null;
-    const {payload} = action
+    const token = credentialStore.get() || null;
+   
+	
     // we fetch/get/post just when we dont need the auth token
-    if (payload.apiType !=='Auth')
+    if (action.apiType !=='Auth')
     {
-	apiHandler[payload.apiType].fetchData(payload, token, (error,response,body)=>{
 
+	apiHandler[action.apiType].fetchData(action, token, (error,response,body)=>{
 	    if ((error) || (response.statusCode !== 200))
 	    {
 		dispatch({ type: errorType, error: error})
 	    }
 	    else
 	    {
-		dispatch({ response: JSON.parse(body), filters: payload.filters,
+	 	
+		dispatch({ response: JSON.parse(body), filters: action.filters,
 			   type: successType })
 	    }
 	})
     }
     else
     {
-	apiHandler[payload.apiType].fetchData(payload)
+	storeCredential(action)
     }
 }
 
