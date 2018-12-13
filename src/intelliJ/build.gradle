@@ -54,5 +54,6 @@ jar {
         // compile group: 'org.jsweet.candies.trusted', name: 'es6-promise', version:'0.0.0-SNAPSHOT'
         compile group: 'org.jsweet', name: 'jsweet-transpiler', version:'2.0.0-SNAPSHOT'
         compile group: 'org.jsweet.candies', name: 'react-global', version: '0.14.0-SNAPSHOT'
+        compile group: 'org.jsweet.candies', name: 'jquery', version: '1.10.0-SNAPSHOT'
     }
 
