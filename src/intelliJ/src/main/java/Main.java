@@ -1,9 +1,10 @@
-import javafx.animation.*;
+/*import javafx.animation.*;
 import static def.dom.Globals.alert;
 import static def.jquery.Globals.$;
 import java.util.ArrayList;
 import java.util.List;
-import def.js.Array.push;
+import def.js.Array;*/
+
 
 public class Main {
 
@@ -11,8 +12,8 @@ public class Main {
         Main m = new Main();
         System.out.println("Test print from Main method.");
         m.go();
-
-        /*// you can use regular Java API
+/*
+        // you can use regular Java API
         List<String> l = new ArrayList<>();
         l.add("Hello");
         l.add("world");
